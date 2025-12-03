@@ -63,7 +63,7 @@ type Model struct {
 	output     textarea.Model
 	toolSelect components.Dropdown
 
-	focusIndex int  // 0=title, 1=tool, 2=tags, 3=prompt, 4=output
+	focusIndex int  // 0=prompt, 1=output, 2=title, 3=tool, 4=tags
 	showHelp   bool
 	showToast  bool
 	toastMsg   string
@@ -77,18 +77,18 @@ type Model struct {
 }
 
 func New(cfg *config.Config, tool string, stay bool) Model {
-	// initialize title input (focused first)
-	titleInput := textinput.New()
-	titleInput.Placeholder = "Brief title for your prompt"
-	titleInput.CharLimit = 100
-	titleInput.Focus()
-
-	// initialize prompt textarea
+	// initialize prompt textarea (focused first - most important field)
 	promptTA := textarea.New()
 	promptTA.Placeholder = "Enter your prompt here..."
 	promptTA.CharLimit = 10000
 	promptTA.SetHeight(8)
 	promptTA.ShowLineNumbers = false
+	promptTA.Focus()
+
+	// initialize title input (optional - auto-generated if empty)
+	titleInput := textinput.New()
+	titleInput.Placeholder = "Brief title (optional, auto-generated if empty)"
+	titleInput.CharLimit = 100
 
 	// initialize tags input
 	tagsInput := components.NewTagInput(cfg.FavoriteTags)
@@ -189,6 +189,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		// dynamically size textareas based on available height
+		m.updateTextareaSizes()
 		return m, nil
 
 	case tea.KeyMsg:
@@ -218,7 +220,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.saveAndExit()
 
 		case "/", "ctrl+t":
-			m.setFocus(1) // tool selector
+			m.setFocus(3) // tool selector
 			return m, nil
 
 		case "tab":
@@ -233,29 +235,29 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// update focused component
 	switch m.focusIndex {
-	case 0: // title
-		var cmd tea.Cmd
-		m.title, cmd = m.title.Update(msg)
-		cmds = append(cmds, cmd)
-
-	case 1: // tool selector
-		var cmd tea.Cmd
-		m.toolSelect, cmd = m.toolSelect.Update(msg)
-		cmds = append(cmds, cmd)
-
-	case 2: // tags
-		var cmd tea.Cmd
-		m.tags, cmd = m.tags.Update(msg)
-		cmds = append(cmds, cmd)
-
-	case 3: // prompt
+	case 0: // prompt
 		var cmd tea.Cmd
 		m.prompt, cmd = m.prompt.Update(msg)
 		cmds = append(cmds, cmd)
 
-	case 4: // output
+	case 1: // output
 		var cmd tea.Cmd
 		m.output, cmd = m.output.Update(msg)
+		cmds = append(cmds, cmd)
+
+	case 2: // title
+		var cmd tea.Cmd
+		m.title, cmd = m.title.Update(msg)
+		cmds = append(cmds, cmd)
+
+	case 3: // tool selector
+		var cmd tea.Cmd
+		m.toolSelect, cmd = m.toolSelect.Update(msg)
+		cmds = append(cmds, cmd)
+
+	case 4: // tags
+		var cmd tea.Cmd
+		m.tags, cmd = m.tags.Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
@@ -267,31 +269,53 @@ func (m Model) View() string {
 
 	// header
 	b.WriteString(titleStyle.Render("crumb"))
-	b.WriteString("\n")
-	b.WriteString(helpStyle.Render(fmt.Sprintf("Saving to %s/", m.config.OutputDir)))
+	b.WriteString("  ")
+	b.WriteString(helpStyle.Render(fmt.Sprintf("→ %s/", m.config.OutputDir)))
 	b.WriteString("\n\n")
 
-	// title field (index 0)
-	label := labelStyle.Render("Title:")
+	// prompt field (index 0) - first and most important
+	label := labelStyle.Render("Prompt:")
 	if m.focusIndex == 0 {
-		label = focusedLabelStyle.Render("→ Title:")
+		label = focusedLabelStyle.Render("→ Prompt:")
 	}
 	b.WriteString(label + "\n")
+	b.WriteString(m.prompt.View())
+	b.WriteString("\n\n")
+
+	// output field (index 1) - second most important
+	label = labelStyle.Render("Paste Output:")
+	if m.focusIndex == 1 {
+		label = focusedLabelStyle.Render("→ Paste Output:")
+	}
+	b.WriteString(label + " ")
+	b.WriteString(helpStyle.Render("(optional)"))
+	b.WriteString("\n")
+	b.WriteString(m.output.View())
+	b.WriteString("\n\n")
+
+	// title field (index 2) - optional
+	label = labelStyle.Render("Title:")
+	if m.focusIndex == 2 {
+		label = focusedLabelStyle.Render("→ Title:")
+	}
+	b.WriteString(label + " ")
+	b.WriteString(helpStyle.Render("(optional, auto-generated)"))
+	b.WriteString("\n")
 	b.WriteString(m.title.View())
 	b.WriteString("\n\n")
 
-	// tool selector (index 1)
+	// tool selector (index 3) - optional
 	label = labelStyle.Render("Tool:")
-	if m.focusIndex == 1 {
+	if m.focusIndex == 3 {
 		label = focusedLabelStyle.Render("→ Tool:")
 	}
 	b.WriteString(label + " ")
 	b.WriteString(m.toolSelect.View())
 	b.WriteString("\n\n")
 
-	// tags field (index 2)
+	// tags field (index 4) - optional
 	label = labelStyle.Render("Tags:")
-	if m.focusIndex == 2 {
+	if m.focusIndex == 4 {
 		label = focusedLabelStyle.Render("→ Tags:")
 	}
 	b.WriteString(label + " ")
@@ -300,30 +324,16 @@ func (m Model) View() string {
 	b.WriteString(m.tags.View())
 	b.WriteString("\n\n")
 
-	// prompt field (index 3)
-	label = labelStyle.Render("Prompt:")
-	if m.focusIndex == 3 {
-		label = focusedLabelStyle.Render("→ Prompt:")
-	}
-	b.WriteString(label + "\n")
-	b.WriteString(m.prompt.View())
-	b.WriteString("\n\n")
-
-	// output field (index 4)
-	label = labelStyle.Render("Paste Output:")
-	if m.focusIndex == 4 {
-		label = focusedLabelStyle.Render("→ Paste Output:")
-	}
-	b.WriteString(label + " ")
-	b.WriteString(helpStyle.Render("(optional sharing)"))
-	b.WriteString("\n")
-	b.WriteString(m.output.View())
-	b.WriteString("\n\n")
-
 	// help text
-	b.WriteString(helpStyle.Render("Tab: next field • Shift+Tab: previous • Ctrl+S: save • ?: help • Esc: cancel"))
+	b.WriteString(helpStyle.Render("Tab: next • Shift+Tab: prev • Ctrl+S: save • ?: help • Esc: cancel"))
 
-	baseView := borderStyle.Render(b.String())
+	// use full width and height
+	contentStyle := lipgloss.NewStyle().
+		Width(m.width - 4).
+		Height(m.height - 2).
+		Padding(1, 2)
+
+	baseView := contentStyle.Render(b.String())
 
 	// toast message rendered at bottom, centered
 	if m.showToast {
@@ -373,15 +383,15 @@ func (m *Model) setFocus(index int) {
 	// blur current
 	switch m.focusIndex {
 	case 0:
-		m.title.Blur()
-	case 1:
-		m.toolSelect.Blur()
-	case 2:
-		m.tags.Blur()
-	case 3:
 		m.prompt.Blur()
-	case 4:
+	case 1:
 		m.output.Blur()
+	case 2:
+		m.title.Blur()
+	case 3:
+		m.toolSelect.Blur()
+	case 4:
+		m.tags.Blur()
 	}
 
 	// set new focus
@@ -390,15 +400,15 @@ func (m *Model) setFocus(index int) {
 	// focus new
 	switch m.focusIndex {
 	case 0:
-		m.title.Focus()
-	case 1:
-		m.toolSelect.Focus()
-	case 2:
-		m.tags.Focus()
-	case 3:
 		m.prompt.Focus()
-	case 4:
+	case 1:
 		m.output.Focus()
+	case 2:
+		m.title.Focus()
+	case 3:
+		m.toolSelect.Focus()
+	case 4:
+		m.tags.Focus()
 	}
 }
 
@@ -408,6 +418,35 @@ func (m *Model) focusNext() {
 
 func (m *Model) focusPrev() {
 	m.setFocus((m.focusIndex - 1 + 5) % 5)
+}
+
+// updateTextareaSizes dynamically adjusts textarea heights based on terminal size
+func (m *Model) updateTextareaSizes() {
+	// fixed elements take approximately:
+	// header: 2, labels/spacing: 12, title/tool/tags: 6, footer: 2, padding: 4
+	fixedHeight := 26
+	availableHeight := m.height - fixedHeight
+
+	if availableHeight < 10 {
+		availableHeight = 10 // minimum usable space
+	}
+
+	// split available space: 60% prompt, 40% output
+	promptHeight := (availableHeight * 60) / 100
+	outputHeight := availableHeight - promptHeight
+
+	// set minimums
+	if promptHeight < 4 {
+		promptHeight = 4
+	}
+	if outputHeight < 3 {
+		outputHeight = 3
+	}
+
+	m.prompt.SetHeight(promptHeight)
+	m.prompt.SetWidth(m.width - 8)
+	m.output.SetHeight(outputHeight)
+	m.output.SetWidth(m.width - 8)
 }
 
 func (m *Model) saveAndExit() tea.Cmd {

@@ -206,17 +206,20 @@ func runInit(cfg *config.Config) error {
 
 	// create initial README.md
 	readmePath := filepath.Join(promptsDir, "README.md")
-	initialContent := `# Prompt Sharing
+	initialContent := `# Prompts
 
-Prompts shared by the team to learn from each other.
+A shared collection of AI prompts captured by the team. Learn from each other's techniques, discover effective patterns, and build institutional knowledge around AI-assisted development.
 
-## Prompts
+**What is this?** This directory contains prompts saved using [crumb](https://github.com/rsnodgrass/crumb), a tool for capturing and sharing AI prompts across a team.
+
+## Index
 
 | Date | Author | Tool | Tags | Title |
 |------|--------|------|------|-------|
 
 ---
-*To regenerate this README, run ` + "`crumb readme`*\n"
+*Run ` + "`crumb readme`" + ` to regenerate this index.*
+`
 
 	if err := os.WriteFile(readmePath, []byte(initialContent), 0644); err != nil {
 		return fmt.Errorf("failed to write README: %w", err)

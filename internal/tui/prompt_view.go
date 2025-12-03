@@ -31,7 +31,7 @@ func RenderPromptView(m *Model) string {
 
 // renderHeader renders the top bar with title and tool selector
 func renderHeader(m *Model) string {
-	title := HeaderStyle.Render("prompt-share")
+	title := HeaderStyle.Render("crumb")
 	toolSelector := m.toolSelect.View()
 
 	// calculate padding to push tool selector to the right
@@ -69,24 +69,24 @@ func renderContent(m *Model) string {
 	// add vertical padding
 	lines = append(lines, "")
 
-	// prompt field
+	// prompt field (index 0) - first and most important
 	promptSection := renderPromptFieldAlt(m)
 	lines = append(lines, promptSection)
 	lines = append(lines, "")
 
-	// title field
+	// output field (index 1) - second most important
+	outputSection := renderOutputFieldAlt(m)
+	lines = append(lines, outputSection)
+	lines = append(lines, "")
+
+	// title field (index 2) - optional
 	titleSection := renderTitleFieldAlt(m)
 	lines = append(lines, titleSection)
 	lines = append(lines, "")
 
-	// tags field
+	// tags field (index 4) - optional
 	tagsSection := renderTagsFieldAlt(m)
 	lines = append(lines, tagsSection)
-	lines = append(lines, "")
-
-	// output field
-	outputSection := renderOutputFieldAlt(m)
-	lines = append(lines, outputSection)
 	lines = append(lines, "")
 
 	contentStyle := lipgloss.NewStyle().
@@ -96,9 +96,12 @@ func renderContent(m *Model) string {
 	return contentStyle.Render(strings.Join(lines, "\n"))
 }
 
-// renderPromptFieldAlt renders the prompt input area
+// renderPromptFieldAlt renders the prompt input area (index 0)
 func renderPromptFieldAlt(m *Model) string {
-	label := LabelStyle.Render("Prompt:")
+	label := LabelStyle.Render("→ Prompt:")
+	if m.focusIndex != 0 {
+		label = LabelStyle.Render("Prompt:")
+	}
 
 	var borderStyle lipgloss.Style
 	if m.focusIndex == 0 {
@@ -117,37 +120,46 @@ func renderPromptFieldAlt(m *Model) string {
 	return label + "\n" + inputBox
 }
 
-// renderTitleFieldAlt renders the title input
+// renderTitleFieldAlt renders the title input (index 2)
 func renderTitleFieldAlt(m *Model) string {
 	label := LabelStyle.Render("Title: ")
+	if m.focusIndex == 2 {
+		label = LabelStyle.Render("→ Title: ")
+	}
 
 	content := m.title.View()
 
-	if m.focusIndex == 1 {
+	if m.focusIndex == 2 {
 		content = FocusedBorderStyle.
 			Inline(true).
 			Padding(0, 1).
 			Render(content)
 	}
 
-	return label + content
+	return label + content + " " + HelpStyle.Render("(optional, auto-generated)")
 }
 
-// renderTagsFieldAlt renders the tags input
+// renderTagsFieldAlt renders the tags input (index 4)
 func renderTagsFieldAlt(m *Model) string {
-	label := LabelStyle.Render("Tags:  ")
+	label := LabelStyle.Render("Tags: ")
+	if m.focusIndex == 4 {
+		label = LabelStyle.Render("→ Tags: ")
+	}
 
 	tagList := m.tags.View()
 
-	return label + tagList
+	return label + tagList + " " + HelpStyle.Render("(enter to add, backspace to remove)")
 }
 
-// renderOutputFieldAlt renders the optional output textarea
+// renderOutputFieldAlt renders the optional output textarea (index 1)
 func renderOutputFieldAlt(m *Model) string {
-	label := LabelStyle.Render("Output (optional):")
+	label := LabelStyle.Render("Paste Output:")
+	if m.focusIndex == 1 {
+		label = LabelStyle.Render("→ Paste Output:")
+	}
 
 	var borderStyle lipgloss.Style
-	if m.focusIndex == 3 {
+	if m.focusIndex == 1 {
 		borderStyle = FocusedBorderStyle
 	} else {
 		borderStyle = BorderStyle
@@ -160,7 +172,7 @@ func renderOutputFieldAlt(m *Model) string {
 		Padding(1).
 		Render(content)
 
-	return label + "\n" + inputBox
+	return label + " " + HelpStyle.Render("(optional)") + "\n" + inputBox
 }
 
 // renderFooter renders the bottom help bar
