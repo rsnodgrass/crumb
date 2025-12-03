@@ -8,13 +8,21 @@ A beautiful TUI tool for teams to capture and share AI prompts, creating a colla
 
 ![prompt-share TUI](assets/demo.png)
 
+## Design Philosophy
+
+prompt-share is built for **minimal friction**:
+- Launch → Type → Save in under 10 seconds
+- Auto-generated titles and timestamps
+- Smart defaults from config
+- Keyboard-first navigation
+
 ## Features
 
 - **Capture-as-you-go** - Minimal friction prompt capture workflow
 - **Beautiful TUI** - Catppuccin-inspired terminal interface
 - **10+ AI tools** - Claude Code, Cursor, Kiro, ChatGPT, Copilot, Warp AI, Windsurf, Aider, Gemini, Perplexity
 - **Auto-generated metadata** - Timestamp, author (from git), title
-- **Tag autocomplete** - From existing prompts in your repo
+- **Smart tag suggestions** - Quick-select favorites with number keys (1-5)
 - **README generation** - Auto-generate prompt index for discovery
 
 ## Installation

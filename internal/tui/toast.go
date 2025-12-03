@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"os"
 	"strings"
 	"time"
 
@@ -8,21 +9,23 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// toast styling
+// toast styling with improved borders
 var (
 	successToastStyle = lipgloss.NewStyle().
-				Background(lipgloss.Color("#a6e3a1")).
-				Foreground(lipgloss.Color("#1e1e2e")).
+				Foreground(lipgloss.Color("#a6e3a1")).
+				Background(lipgloss.Color("#1e1e2e")).
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(lipgloss.Color("#a6e3a1")).
 				Padding(0, 2).
-				BorderStyle(lipgloss.RoundedBorder()).
-				BorderForeground(lipgloss.Color("#a6e3a1"))
+				Bold(true)
 
 	errorToastStyle = lipgloss.NewStyle().
-			Background(lipgloss.Color("#f38ba8")).
-			Foreground(lipgloss.Color("#1e1e2e")).
+			Foreground(lipgloss.Color("#f38ba8")).
+			Background(lipgloss.Color("#1e1e2e")).
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("#f38ba8")).
 			Padding(0, 2).
-			BorderStyle(lipgloss.RoundedBorder()).
-			BorderForeground(lipgloss.Color("#f38ba8"))
+			Bold(true)
 )
 
 // ToastHideMsg is sent after toast timeout
@@ -63,4 +66,15 @@ func HideToastAfter(duration time.Duration) tea.Cmd {
 	return tea.Tick(duration, func(t time.Time) tea.Msg {
 		return ToastHideMsg{}
 	})
+}
+
+// FormatSaveError returns a user-friendly error message based on the error type
+func FormatSaveError(err error) string {
+	if os.IsPermission(err) {
+		return "Permission denied - check directory permissions"
+	}
+	if os.IsNotExist(err) {
+		return "Directory not found - run 'prompt-share init' first"
+	}
+	return err.Error()
 }

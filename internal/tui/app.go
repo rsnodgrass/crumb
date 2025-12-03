@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -68,6 +70,7 @@ type Model struct {
 	isError    bool
 
 	config   *config.Config
+	storage  *storage.MarkdownStorage
 	stayOpen bool // --stay flag
 	width    int
 	height   int
@@ -106,7 +109,16 @@ func New(cfg *config.Config, tool string, stay bool) Model {
 			break
 		}
 	}
-	toolDropdown := components.NewDropdown(allTools, defaultIdx)
+	toolDropdown := components.NewDropdown(allTools, defaultIdx, tool)
+
+	// initialize storage with output directory from config
+	// resolve relative path to absolute path based on cwd
+	cwd, _ := os.Getwd()
+	outputDir := cfg.OutputDir
+	if !filepath.IsAbs(outputDir) {
+		outputDir = filepath.Join(cwd, outputDir)
+	}
+	markdownStorage := storage.NewMarkdownStorage(outputDir)
 
 	return Model{
 		prompt:     promptTA,
@@ -120,6 +132,7 @@ func New(cfg *config.Config, tool string, stay bool) Model {
 		toastMsg:   "",
 		isError:    false,
 		config:     cfg,
+		storage:    markdownStorage,
 		stayOpen:   stay,
 		width:      80,
 		height:     24,
@@ -450,19 +463,26 @@ func (m *Model) saveAndExit() tea.Cmd {
 		content.WriteString("\n")
 	}
 
-	// TODO: save to file system and get actual filepath
-	filepath := fmt.Sprintf("learning/prompts/%s", filename)
+	// actually save to file system
+	filepath, err := m.storage.Save(filename, content.String())
+	if err != nil {
+		m.showToast = true
+		m.isError = true
+		m.toastMsg = "Error: " + err.Error()
+		return HideToastAfter(3 * time.Second)
+	}
 
 	// show success message
 	if m.stayOpen {
 		m.showToast = true
 		m.isError = false
-		m.toastMsg = fmt.Sprintf("Saved to %s", filepath)
+		m.toastMsg = fmt.Sprintf("Saved: %s", filepath)
+		m.clearFields()
 		return HideToastAfter(2 * time.Second)
 	}
 
-	// exit after save
-	return tea.Quit
+	// return success message which will trigger exit
+	return func() tea.Msg { return saveSuccessMsg{filename: filepath} }
 }
 
 // clearFields resets all input fields to empty state

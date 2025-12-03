@@ -26,7 +26,23 @@ func NewMarkdownStorage(baseDir string) *MarkdownStorage {
 	}
 }
 
-func (m *MarkdownStorage) Save(metadata PromptMetadata, content string) error {
+// Save writes markdown content to a file in the base directory.
+// Returns the full filepath on success or an error.
+func (m *MarkdownStorage) Save(filename string, content string) (string, error) {
+	if err := os.MkdirAll(m.baseDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create directory: %w", err)
+	}
+
+	fullPath := filepath.Join(m.baseDir, filename)
+	if err := os.WriteFile(fullPath, []byte(content), 0644); err != nil {
+		return "", fmt.Errorf("failed to write file: %w", err)
+	}
+
+	return fullPath, nil
+}
+
+// SaveWithMetadata is the legacy method for saving with structured metadata
+func (m *MarkdownStorage) SaveWithMetadata(metadata PromptMetadata, content string) error {
 	if err := os.MkdirAll(m.baseDir, 0755); err != nil {
 		return fmt.Errorf("failed to create prompts directory: %w", err)
 	}
