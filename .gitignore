@@ -1,0 +1,5 @@
+bin/
+dist/
+completions/
+*.exe
+.DS_Store

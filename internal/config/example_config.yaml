@@ -1,0 +1,19 @@
+# Example configuration file for prompt-share
+# Place this at: ~/.config/prompt-share/config.yaml
+
+# Default tool to use when not specified
+default_tool: "Claude Code"
+
+# Custom tools in addition to built-in ones
+custom_tools:
+  - "My Custom Tool"
+  - "Another Tool"
+
+# Favorite tags for quick filtering
+favorite_tags:
+  - "golang"
+  - "testing"
+  - "architecture"
+
+# Output directory for prompts (relative to your home or learning directory)
+output_dir: "learning/prompts"
