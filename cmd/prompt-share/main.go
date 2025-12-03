@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/adrg/xdg"
+	tea "github.com/charmbracelet/bubbletea"
 	"prompt-share/internal/config"
 	"prompt-share/internal/readme"
 	"prompt-share/internal/tui"
@@ -109,20 +110,12 @@ func runTUI(cfg *config.Config, toolOverride string, stay bool) error {
 	}
 
 	// create and run TUI model with tool pre-selected
-	// note: when TUI is fully implemented (app.go), use:
-	// model := tui.New(cfg, selectedTool, stay)
-	// p := tea.NewProgram(model, tea.WithAltScreen())
-	// if _, err := p.Run(); err != nil {
-	//     return fmt.Errorf("TUI error: %w", err)
-	// }
-	// return nil
-
-	app := tui.NewApp()
-	// TODO: remove NewApp() once tui.New() is fully implemented in app.go
-	_ = cfg
-	_ = selectedTool
-	_ = stay
-	return app.Run()
+	model := tui.New(cfg, selectedTool, stay)
+	p := tea.NewProgram(model, tea.WithAltScreen())
+	if _, err := p.Run(); err != nil {
+		return fmt.Errorf("TUI error: %w", err)
+	}
+	return nil
 }
 
 // runReadme generates/updates the README.md in the prompts directory

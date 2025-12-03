@@ -6,7 +6,7 @@
 
 A beautiful TUI tool for teams to capture and share AI prompts, creating a collaborative learning resource in your repo.
 
-<!-- TODO: Add demo GIF once TUI is complete -->
+![prompt-share TUI](assets/demo.png)
 
 ## Features
 
