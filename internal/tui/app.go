@@ -310,12 +310,12 @@ func (m Model) View() string {
 	b.WriteString("\n\n")
 
 	// output field (index 4)
-	label = labelStyle.Render("Output:")
+	label = labelStyle.Render("Paste Output:")
 	if m.focusIndex == 4 {
-		label = focusedLabelStyle.Render("→ Output:")
+		label = focusedLabelStyle.Render("→ Paste Output:")
 	}
 	b.WriteString(label + " ")
-	b.WriteString(helpStyle.Render("(optional)"))
+	b.WriteString(helpStyle.Render("(optional sharing)"))
 	b.WriteString("\n")
 	b.WriteString(m.output.View())
 	b.WriteString("\n\n")
