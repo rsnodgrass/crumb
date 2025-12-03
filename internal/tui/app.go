@@ -90,8 +90,20 @@ func New(cfg *config.Config, tool string, stay bool) Model {
 	titleInput.Placeholder = "Brief title (optional, auto-generated if empty)"
 	titleInput.CharLimit = 100
 
-	// initialize tags input
-	tagsInput := components.NewTagInput(cfg.FavoriteTags)
+	// initialize storage with output directory from config
+	// resolve relative path to absolute path based on cwd
+	cwd, _ := os.Getwd()
+	outputDir := cfg.OutputDir
+	if !filepath.IsAbs(outputDir) {
+		outputDir = filepath.Join(cwd, outputDir)
+	}
+	markdownStorage := storage.NewMarkdownStorage(outputDir)
+
+	// build tag suggestions: config favorites + frequent tags from existing crumbs
+	tagSuggestions := mergeTagSuggestions(cfg.FavoriteTags, markdownStorage.GetFrequentTags(10))
+
+	// initialize tags input with merged suggestions
+	tagsInput := components.NewTagInput(tagSuggestions)
 
 	// initialize output textarea
 	outputTA := textarea.New()
@@ -110,15 +122,6 @@ func New(cfg *config.Config, tool string, stay bool) Model {
 		}
 	}
 	toolDropdown := components.NewDropdown(allTools, defaultIdx, tool)
-
-	// initialize storage with output directory from config
-	// resolve relative path to absolute path based on cwd
-	cwd, _ := os.Getwd()
-	outputDir := cfg.OutputDir
-	if !filepath.IsAbs(outputDir) {
-		outputDir = filepath.Join(cwd, outputDir)
-	}
-	markdownStorage := storage.NewMarkdownStorage(outputDir)
 
 	return Model{
 		prompt:     promptTA,
@@ -526,7 +529,33 @@ func (m *Model) saveAndExit() tea.Cmd {
 func (m *Model) clearFields() {
 	m.prompt.Reset()
 	m.title.SetValue("")
-	m.tags = components.NewTagInput(m.config.FavoriteTags)
+	// rebuild tag suggestions with fresh frequent tags
+	tagSuggestions := mergeTagSuggestions(m.config.FavoriteTags, m.storage.GetFrequentTags(10))
+	m.tags = components.NewTagInput(tagSuggestions)
 	m.output.Reset()
 	m.setFocus(0)
+}
+
+// mergeTagSuggestions combines config favorites with frequent tags, removing duplicates
+func mergeTagSuggestions(favorites []string, frequent []string) []string {
+	seen := make(map[string]bool)
+	result := make([]string, 0, len(favorites)+len(frequent))
+
+	// add favorites first (higher priority)
+	for _, tag := range favorites {
+		if !seen[tag] {
+			seen[tag] = true
+			result = append(result, tag)
+		}
+	}
+
+	// add frequent tags that aren't already in favorites
+	for _, tag := range frequent {
+		if !seen[tag] {
+			seen[tag] = true
+			result = append(result, tag)
+		}
+	}
+
+	return result
 }

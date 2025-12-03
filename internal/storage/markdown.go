@@ -1,9 +1,11 @@
 package storage
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -105,4 +107,113 @@ func (m *MarkdownStorage) formatMarkdown(metadata PromptMetadata, content string
 	sb.WriteString("\n")
 
 	return sb.String()
+}
+
+// GetFrequentTags scans all crumb files and returns tags sorted by frequency
+func (m *MarkdownStorage) GetFrequentTags(limit int) []string {
+	tagCounts := make(map[string]int)
+
+	entries, err := os.ReadDir(m.baseDir)
+	if err != nil {
+		return []string{}
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".md") || entry.Name() == "README.md" {
+			continue
+		}
+
+		tags := m.extractTagsFromFile(filepath.Join(m.baseDir, entry.Name()))
+		for _, tag := range tags {
+			tagCounts[tag]++
+		}
+	}
+
+	// sort by frequency
+	type tagFreq struct {
+		tag   string
+		count int
+	}
+	freqs := make([]tagFreq, 0, len(tagCounts))
+	for tag, count := range tagCounts {
+		freqs = append(freqs, tagFreq{tag, count})
+	}
+	sort.Slice(freqs, func(i, j int) bool {
+		return freqs[i].count > freqs[j].count
+	})
+
+	// return top N
+	result := make([]string, 0, limit)
+	for i := 0; i < len(freqs) && i < limit; i++ {
+		result = append(result, freqs[i].tag)
+	}
+	return result
+}
+
+// extractTagsFromFile parses YAML frontmatter to extract tags
+func (m *MarkdownStorage) extractTagsFromFile(path string) []string {
+	file, err := os.Open(path)
+	if err != nil {
+		return []string{}
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	inFrontmatter := false
+	inTags := false
+	tags := []string{}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// detect frontmatter boundaries
+		if line == "---" {
+			if !inFrontmatter {
+				inFrontmatter = true
+				continue
+			} else {
+				break // end of frontmatter
+			}
+		}
+
+		if !inFrontmatter {
+			continue
+		}
+
+		// detect tags section
+		if strings.HasPrefix(line, "tags:") {
+			inTags = true
+			// check for inline tags: tags: [tag1, tag2]
+			rest := strings.TrimPrefix(line, "tags:")
+			rest = strings.TrimSpace(rest)
+			if strings.HasPrefix(rest, "[") && strings.HasSuffix(rest, "]") {
+				// inline array format
+				inner := strings.Trim(rest, "[]")
+				for _, t := range strings.Split(inner, ",") {
+					t = strings.TrimSpace(t)
+					if t != "" {
+						tags = append(tags, t)
+					}
+				}
+				inTags = false
+			}
+			continue
+		}
+
+		// parse tag list items
+		if inTags {
+			if strings.HasPrefix(line, "  - ") {
+				tag := strings.TrimPrefix(line, "  - ")
+				tag = strings.TrimSpace(tag)
+				if tag != "" {
+					tags = append(tags, tag)
+				}
+			} else if !strings.HasPrefix(line, "  ") && !strings.HasPrefix(line, "\t") {
+				// no longer indented, end of tags
+				inTags = false
+			}
+		}
+	}
+
+	return tags
 }

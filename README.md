@@ -112,6 +112,10 @@ output_dir: crumbs
 | `/` | Open tool selector |
 | `?` | Show help |
 
+## See Also
+
+- **[beads](https://github.com/steveyegge/beads)** - Git-native issue tracking for AI-assisted development. Track work alongside your code without leaving the terminal.
+
 ## License
 
 [MIT](LICENSE)
