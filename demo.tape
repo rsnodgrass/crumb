@@ -14,8 +14,8 @@ Set Padding 20
 Set TypingSpeed 50ms
 Env PS1 "% "
 
-# Initialize crumbs directory
-Type "mkdir -p crumbs"
+# Initialize crumbs directory with README
+Type "./crumb init"
 Enter
 Sleep 500ms
 
@@ -24,11 +24,30 @@ Type "./crumb"
 Enter
 Sleep 1s
 
-# Title field (focused first) - type a descriptive title
-Type "Refactor auth module to use JWT tokens"
+# Prompt field is focused first - start typing immediately
+Type "Please refactor the authentication module to use JWT tokens instead of session cookies."
+Enter
+Enter
+Type "Requirements:"
+Enter
+Type "- Use RS256 algorithm for signing"
+Enter
+Type "- Include refresh token rotation"
+Enter
+Type "- Add token blacklist for logout"
+Sleep 500ms
+
+# Tab to Output field (skip it)
+Tab
+Sleep 300ms
+
+# Tab to Title field - add optional title
+Tab
+Sleep 300ms
+Type "Refactor auth to JWT"
 Sleep 400ms
 
-# Tab to Tool selector
+# Tab to Tool selector (already defaults to Claude Code)
 Tab
 Sleep 300ms
 
@@ -46,23 +65,6 @@ Sleep 200ms
 Type "security"
 Enter
 Sleep 300ms
-
-# Tab to Prompt field
-Tab
-Sleep 300ms
-
-# Type the prompt content
-Type "Please refactor the authentication module to use JWT tokens instead of session cookies."
-Enter
-Enter
-Type "Requirements:"
-Enter
-Type "- Use RS256 algorithm for signing"
-Enter
-Type "- Include refresh token rotation"
-Enter
-Type "- Add token blacklist for logout"
-Sleep 500ms
 
 # Save with Ctrl+S
 Ctrl+S
