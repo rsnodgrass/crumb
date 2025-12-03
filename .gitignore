@@ -3,5 +3,5 @@ dist/
 completions/
 *.exe
 .DS_Store
-prompt-share
+/crumb
 learning/

@@ -9,9 +9,9 @@ import (
 
 	"github.com/adrg/xdg"
 	tea "github.com/charmbracelet/bubbletea"
-	"prompt-share/internal/config"
-	"prompt-share/internal/readme"
-	"prompt-share/internal/tui"
+	"crumb/internal/config"
+	"crumb/internal/readme"
+	"crumb/internal/tui"
 )
 
 var version = "dev"
@@ -45,7 +45,7 @@ func run() error {
 
 	// handle version flag
 	if versionFlag {
-		fmt.Printf("prompt-share version %s\n", version)
+		fmt.Printf("crumb version %s\n", version)
 		return nil
 	}
 
@@ -131,7 +131,7 @@ func runReadme(cfg *config.Config) error {
 
 	// check if directory exists
 	if _, err := os.Stat(promptsDir); os.IsNotExist(err) {
-		return fmt.Errorf("prompts directory does not exist: %s (run 'prompt-share init' first)", promptsDir)
+		return fmt.Errorf("prompts directory does not exist: %s (run 'crumb init' first)", promptsDir)
 	}
 
 	// generate README content
@@ -153,7 +153,7 @@ func runReadme(cfg *config.Config) error {
 // runConfig opens the config file in $EDITOR (or vim if not set)
 func runConfig() error {
 	// get config file path
-	configPath, err := xdg.ConfigFile("prompt-share/config.yaml")
+	configPath, err := xdg.ConfigFile("crumb/config.yaml")
 	if err != nil {
 		return fmt.Errorf("failed to get config file path: %w", err)
 	}
@@ -216,7 +216,7 @@ Prompts shared by the team to learn from each other.
 |------|--------|------|------|-------|
 
 ---
-*To regenerate this README, run ` + "`prompt-share readme`*\n"
+*To regenerate this README, run ` + "`crumb readme`*\n"
 
 	if err := os.WriteFile(readmePath, []byte(initialContent), 0644); err != nil {
 		return fmt.Errorf("failed to write README: %w", err)
@@ -229,7 +229,7 @@ Prompts shared by the team to learn from each other.
 
 // writeDefaultConfig writes a default config file
 func writeDefaultConfig(path string) error {
-	defaultContent := `# prompt-share configuration
+	defaultContent := `# crumb configuration
 
 # default tool to pre-select in the dropdown
 default_tool: Claude Code
@@ -249,10 +249,10 @@ output_dir: learning/prompts
 
 // printUsage prints usage information
 func printUsage() {
-	fmt.Fprintf(os.Stderr, `prompt-share - capture and share AI prompts
+	fmt.Fprintf(os.Stderr, `crumb - leave crumbs for your teammates
 
 USAGE:
-  prompt-share [command] [flags]
+  crumb [command] [flags]
 
 COMMANDS:
   (default)      launch TUI to capture a new prompt
@@ -267,15 +267,15 @@ FLAGS:
   -h, --help           show help
 
 EXAMPLES:
-  prompt-share                    # launch TUI
-  prompt-share -t "ChatGPT"       # launch TUI with tool override
-  prompt-share readme             # regenerate README
-  prompt-share config             # edit config
-  prompt-share init               # initialize prompts directory
+  crumb                    # launch TUI
+  crumb -t "ChatGPT"       # launch TUI with tool override
+  crumb readme             # regenerate README
+  crumb config             # edit config
+  crumb init               # initialize prompts directory
 
 CONFIG:
-  Config file: ~/.config/prompt-share/config.yaml
-  Run 'prompt-share config' to edit
+  Config file: ~/.config/crumb/config.yaml
+  Run 'crumb config' to edit
 
 `)
 }

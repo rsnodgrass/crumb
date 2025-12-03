@@ -1,4 +1,4 @@
-# VHS Demo Tape for prompt-share
+# VHS Demo Tape for crumb
 # https://github.com/charmbracelet/vhs
 
 Output assets/demo.gif
@@ -16,7 +16,7 @@ Enter
 Sleep 500ms
 
 # Launch the TUI
-Type "./prompt-share"
+Type "./crumb"
 Enter
 Sleep 1s
 

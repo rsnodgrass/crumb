@@ -11,9 +11,9 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"prompt-share/internal/config"
-	"prompt-share/internal/storage"
-	"prompt-share/internal/tui/components"
+	"crumb/internal/config"
+	"crumb/internal/storage"
+	"crumb/internal/tui/components"
 )
 
 // App is a simple wrapper to match the expected interface from main.go
@@ -24,7 +24,7 @@ func NewApp() *App {
 }
 
 func (a *App) Run() error {
-	fmt.Println("prompt-share TUI initialized")
+	fmt.Println("crumb TUI initialized")
 	fmt.Println("TODO: integrate bubbletea Model")
 	return nil
 }
@@ -266,7 +266,7 @@ func (m Model) View() string {
 	var b strings.Builder
 
 	// header
-	b.WriteString(titleStyle.Render("Prompt Share"))
+	b.WriteString(titleStyle.Render("crumb"))
 	b.WriteString("\n")
 	b.WriteString(helpStyle.Render(fmt.Sprintf("Saving to %s/", m.config.OutputDir)))
 	b.WriteString("\n\n")
@@ -341,7 +341,7 @@ func (m Model) View() string {
 func (m Model) renderHelp() string {
 	var b strings.Builder
 
-	b.WriteString(titleStyle.Render("Prompt Share - Help"))
+	b.WriteString(titleStyle.Render("crumb - Help"))
 	b.WriteString("\n\n")
 
 	b.WriteString(labelStyle.Render("Navigation:"))

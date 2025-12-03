@@ -1,14 +1,14 @@
 version: 2
 
-project_name: prompt-share
+project_name: crumb
 
 before:
   hooks:
     - go mod tidy
 
 builds:
-  - main: ./cmd/prompt-share
-    binary: prompt-share
+  - main: ./cmd/crumb
+    binary: crumb
     env:
       - CGO_ENABLED=0
     goos:
@@ -49,4 +49,4 @@ changelog:
 release:
   github:
     owner: rsnodgrass
-    name: prompt-share
+    name: crumb

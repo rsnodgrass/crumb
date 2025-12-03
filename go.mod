@@ -1,4 +1,4 @@
-module prompt-share
+module crumb
 
 go 1.25
 

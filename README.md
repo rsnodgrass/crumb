@@ -1,17 +1,19 @@
-# prompt-share
+# crumb
 
-[![Release](https://img.shields.io/github/v/release/rsnodgrass/prompt-share)](https://github.com/rsnodgrass/prompt-share/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/rsnodgrass/prompt-share/build.yml)](https://github.com/rsnodgrass/prompt-share/actions)
+[![Release](https://img.shields.io/github/v/release/rsnodgrass/crumb)](https://github.com/rsnodgrass/crumb/releases)
+[![Build](https://img.shields.io/github/actions/workflow/status/rsnodgrass/crumb/build.yml)](https://github.com/rsnodgrass/crumb/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-A beautiful TUI tool for teams to capture and share AI prompts, creating a collaborative learning resource in your repo.
+**leave crumbs for your teammates**
 
-![prompt-share TUI](assets/demo.png)
+A beautiful TUI for capturing and sharing AI prompts - create a collaborative learning trail in your repo.
+
+![crumb TUI](assets/demo.gif)
 
 ## Design Philosophy
 
-prompt-share is built for **minimal friction**:
-- Launch → Type → Save in under 10 seconds
+crumb is built for **minimal friction**:
+- Launch, type, save in under 10 seconds
 - Auto-generated titles and timestamps
 - Smart defaults from config
 - Keyboard-first navigation
@@ -30,31 +32,31 @@ prompt-share is built for **minimal friction**:
 ### macOS & Linux (Homebrew)
 
 ```bash
-brew install rsnodgrass/tap/prompt-share
+brew install rsnodgrass/tap/crumb
 ```
 
 ### Windows (Scoop)
 
 ```bash
 scoop bucket add rsnodgrass https://github.com/rsnodgrass/scoop-bucket
-scoop install prompt-share
+scoop install crumb
 ```
 
 ### Go
 
 ```bash
-go install github.com/rsnodgrass/prompt-share/cmd/prompt-share@latest
+go install github.com/rsnodgrass/crumb/cmd/crumb@latest
 ```
 
 ### Binary Downloads
 
-Download pre-built binaries from [Releases](https://github.com/rsnodgrass/prompt-share/releases).
+Download pre-built binaries from [Releases](https://github.com/rsnodgrass/crumb/releases).
 
 ### From Source
 
 ```bash
-git clone https://github.com/rsnodgrass/prompt-share.git
-cd prompt-share
+git clone https://github.com/rsnodgrass/crumb.git
+cd crumb
 make install
 ```
 
@@ -62,30 +64,30 @@ make install
 
 ```bash
 # Initialize prompts directory in your repo
-prompt-share init
+crumb init
 
 # Capture a new prompt
-prompt-share
+crumb
 
 # Generate README index of all prompts
-prompt-share readme
+crumb readme
 ```
 
 ## Usage
 
 ```bash
-prompt-share              # Launch TUI to capture a prompt
-prompt-share init         # Create learning/prompts/ directory
-prompt-share readme       # Generate/update prompt index
-prompt-share config       # Open config in $EDITOR
-prompt-share -t Cursor    # Override default tool
-prompt-share --stay       # Capture multiple prompts
-prompt-share -v           # Show version
+crumb              # Launch TUI to capture a prompt
+crumb init         # Create learning/prompts/ directory
+crumb readme       # Generate/update prompt index
+crumb config       # Open config in $EDITOR
+crumb -t Cursor    # Override default tool
+crumb --stay       # Capture multiple prompts
+crumb -v           # Show version
 ```
 
 ## Configuration
 
-Config file: `~/.config/prompt-share/config.yaml`
+Config file: `~/.config/crumb/config.yaml`
 
 ```yaml
 default_tool: Claude Code

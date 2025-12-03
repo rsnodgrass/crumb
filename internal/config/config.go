@@ -42,7 +42,7 @@ func DefaultConfig() *Config {
 
 // Load loads configuration from XDG config path, returns defaults if not found
 func Load() (*Config, error) {
-	configPath, err := xdg.ConfigFile("prompt-share/config.yaml")
+	configPath, err := xdg.ConfigFile("crumb/config.yaml")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get config file path: %w", err)
 	}

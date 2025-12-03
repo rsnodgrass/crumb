@@ -103,7 +103,7 @@ func TestLoad_WithConfigFile(t *testing.T) {
 	// reload xdg paths
 	xdg.Reload()
 
-	configDir := filepath.Join(tempDir, "prompt-share")
+	configDir := filepath.Join(tempDir, "crumb")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create config directory: %v", err)
 	}
@@ -155,7 +155,7 @@ func TestLoad_PartialConfig(t *testing.T) {
 	// reload xdg paths
 	xdg.Reload()
 
-	configDir := filepath.Join(tempDir, "prompt-share")
+	configDir := filepath.Join(tempDir, "crumb")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create config directory: %v", err)
 	}
