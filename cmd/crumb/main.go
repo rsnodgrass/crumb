@@ -6,9 +6,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/adrg/xdg"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/glamour"
 	"crumb/internal/config"
 	"crumb/internal/readme"
 	"crumb/internal/tui"
@@ -80,6 +82,10 @@ func run() error {
 	case "init":
 		return runInit(cfg)
 	default:
+		// check if it's a markdown file
+		if strings.HasSuffix(command, ".md") {
+			return renderMarkdown(command)
+		}
 		return fmt.Errorf("unknown command: %s", command)
 	}
 }
@@ -230,6 +236,30 @@ A shared collection of AI prompts captured by the team. Learn from each other's 
 	return nil
 }
 
+// renderMarkdown renders a markdown file using glamour
+func renderMarkdown(path string) error {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	renderer, err := glamour.NewTermRenderer(
+		glamour.WithAutoStyle(),
+		glamour.WithWordWrap(80),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to create renderer: %w", err)
+	}
+
+	out, err := renderer.Render(string(content))
+	if err != nil {
+		return fmt.Errorf("failed to render markdown: %w", err)
+	}
+
+	fmt.Print(out)
+	return nil
+}
+
 // writeDefaultConfig writes a default config file
 func writeDefaultConfig(path string) error {
 	defaultContent := `# crumb configuration
@@ -259,6 +289,7 @@ USAGE:
 
 COMMANDS:
   (default)      launch TUI to capture a new prompt
+  <file.md>      render markdown file with syntax highlighting
   readme         generate/update crumbs/README.md
   config         open config file in $EDITOR
   init           create crumbs/ directory with starter README
@@ -272,6 +303,7 @@ FLAGS:
 EXAMPLES:
   crumb                    # launch TUI
   crumb -t "ChatGPT"       # launch TUI with tool override
+  crumb file.md            # render markdown file
   crumb readme             # regenerate README
   crumb config             # edit config
   crumb init               # initialize prompts directory
