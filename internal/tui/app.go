@@ -63,7 +63,7 @@ type Model struct {
 	output     textarea.Model
 	toolSelect components.Dropdown
 
-	focusIndex int  // 0=prompt, 1=title, 2=tags, 3=output, 4=tool
+	focusIndex int  // 0=title, 1=tool, 2=tags, 3=prompt, 4=output
 	showHelp   bool
 	showToast  bool
 	toastMsg   string
@@ -77,18 +77,18 @@ type Model struct {
 }
 
 func New(cfg *config.Config, tool string, stay bool) Model {
+	// initialize title input (focused first)
+	titleInput := textinput.New()
+	titleInput.Placeholder = "Brief title for your prompt"
+	titleInput.CharLimit = 100
+	titleInput.Focus()
+
 	// initialize prompt textarea
 	promptTA := textarea.New()
 	promptTA.Placeholder = "Enter your prompt here..."
 	promptTA.CharLimit = 10000
 	promptTA.SetHeight(8)
 	promptTA.ShowLineNumbers = false
-	promptTA.Focus()
-
-	// initialize title input
-	titleInput := textinput.New()
-	titleInput.Placeholder = "Auto-generated from prompt"
-	titleInput.CharLimit = 100
 
 	// initialize tags input
 	tagsInput := components.NewTagInput(cfg.FavoriteTags)
@@ -218,7 +218,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, m.saveAndExit()
 
 		case "/", "ctrl+t":
-			m.setFocus(4)
+			m.setFocus(1) // tool selector
 			return m, nil
 
 		case "tab":
@@ -233,20 +233,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	// update focused component
 	switch m.focusIndex {
-	case 0: // prompt
-		var cmd tea.Cmd
-		m.prompt, cmd = m.prompt.Update(msg)
-		cmds = append(cmds, cmd)
-
-		// auto-generate title from prompt
-		if m.title.Value() == "" && m.prompt.Value() != "" {
-			autoTitle := storage.GenerateTitle(m.prompt.Value())
-			m.title.SetValue(autoTitle)
-		}
-
-	case 1: // title
+	case 0: // title
 		var cmd tea.Cmd
 		m.title, cmd = m.title.Update(msg)
+		cmds = append(cmds, cmd)
+
+	case 1: // tool selector
+		var cmd tea.Cmd
+		m.toolSelect, cmd = m.toolSelect.Update(msg)
 		cmds = append(cmds, cmd)
 
 	case 2: // tags
@@ -254,14 +248,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.tags, cmd = m.tags.Update(msg)
 		cmds = append(cmds, cmd)
 
-	case 3: // output
+	case 3: // prompt
 		var cmd tea.Cmd
-		m.output, cmd = m.output.Update(msg)
+		m.prompt, cmd = m.prompt.Update(msg)
 		cmds = append(cmds, cmd)
 
-	case 4: // tool selector
+	case 4: // output
 		var cmd tea.Cmd
-		m.toolSelect, cmd = m.toolSelect.Update(msg)
+		m.output, cmd = m.output.Update(msg)
 		cmds = append(cmds, cmd)
 	}
 
@@ -273,27 +267,29 @@ func (m Model) View() string {
 
 	// header
 	b.WriteString(titleStyle.Render("Prompt Share"))
+	b.WriteString("\n")
+	b.WriteString(helpStyle.Render(fmt.Sprintf("Saving to %s/", m.config.OutputDir)))
 	b.WriteString("\n\n")
 
-	// prompt field
-	label := labelStyle.Render("Prompt:")
+	// title field (index 0)
+	label := labelStyle.Render("Title:")
 	if m.focusIndex == 0 {
-		label = focusedLabelStyle.Render("→ Prompt:")
-	}
-	b.WriteString(label + "\n")
-	b.WriteString(m.prompt.View())
-	b.WriteString("\n\n")
-
-	// title field
-	label = labelStyle.Render("Title:")
-	if m.focusIndex == 1 {
 		label = focusedLabelStyle.Render("→ Title:")
 	}
 	b.WriteString(label + "\n")
 	b.WriteString(m.title.View())
 	b.WriteString("\n\n")
 
-	// tags field
+	// tool selector (index 1)
+	label = labelStyle.Render("Tool:")
+	if m.focusIndex == 1 {
+		label = focusedLabelStyle.Render("→ Tool:")
+	}
+	b.WriteString(label + " ")
+	b.WriteString(m.toolSelect.View())
+	b.WriteString("\n\n")
+
+	// tags field (index 2)
 	label = labelStyle.Render("Tags:")
 	if m.focusIndex == 2 {
 		label = focusedLabelStyle.Render("→ Tags:")
@@ -304,22 +300,24 @@ func (m Model) View() string {
 	b.WriteString(m.tags.View())
 	b.WriteString("\n\n")
 
-	// output field
-	label = labelStyle.Render("Output:")
+	// prompt field (index 3)
+	label = labelStyle.Render("Prompt:")
 	if m.focusIndex == 3 {
-		label = focusedLabelStyle.Render("→ Output:")
+		label = focusedLabelStyle.Render("→ Prompt:")
 	}
 	b.WriteString(label + "\n")
-	b.WriteString(m.output.View())
+	b.WriteString(m.prompt.View())
 	b.WriteString("\n\n")
 
-	// tool selector
-	label = labelStyle.Render("Tool:")
+	// output field (index 4)
+	label = labelStyle.Render("Output:")
 	if m.focusIndex == 4 {
-		label = focusedLabelStyle.Render("→ Tool:")
+		label = focusedLabelStyle.Render("→ Output:")
 	}
 	b.WriteString(label + " ")
-	b.WriteString(m.toolSelect.View())
+	b.WriteString(helpStyle.Render("(optional)"))
+	b.WriteString("\n")
+	b.WriteString(m.output.View())
 	b.WriteString("\n\n")
 
 	// help text
@@ -375,15 +373,15 @@ func (m *Model) setFocus(index int) {
 	// blur current
 	switch m.focusIndex {
 	case 0:
-		m.prompt.Blur()
-	case 1:
 		m.title.Blur()
+	case 1:
+		m.toolSelect.Blur()
 	case 2:
 		m.tags.Blur()
 	case 3:
-		m.output.Blur()
+		m.prompt.Blur()
 	case 4:
-		m.toolSelect.Blur()
+		m.output.Blur()
 	}
 
 	// set new focus
@@ -392,15 +390,15 @@ func (m *Model) setFocus(index int) {
 	// focus new
 	switch m.focusIndex {
 	case 0:
-		m.prompt.Focus()
-	case 1:
 		m.title.Focus()
+	case 1:
+		m.toolSelect.Focus()
 	case 2:
 		m.tags.Focus()
 	case 3:
-		m.output.Focus()
+		m.prompt.Focus()
 	case 4:
-		m.toolSelect.Focus()
+		m.output.Focus()
 	}
 }
 
